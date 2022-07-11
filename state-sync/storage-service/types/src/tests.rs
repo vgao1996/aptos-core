@@ -8,13 +8,13 @@ use crate::requests::{
 use crate::responses::{CompleteDataRange, DataSummary, ProtocolMetadata};
 use crate::{Epoch, StorageServiceRequest};
 use aptos_crypto::hash::HashValue;
+use aptos_types::aggregated_signature::AggregatedSignature;
 use aptos_types::ledger_info::LedgerInfoWithSignatures;
 use aptos_types::transaction::Version;
 use aptos_types::{block_info::BlockInfo, ledger_info::LedgerInfo};
 use claim::{assert_err, assert_ok};
 use proptest::arbitrary::any;
 use proptest::prelude::*;
-use std::collections::BTreeMap;
 
 #[test]
 fn test_complete_data_range() {
@@ -192,7 +192,7 @@ fn create_mock_ledger_info(version: Version) -> LedgerInfoWithSignatures {
             BlockInfo::new(0, 0, HashValue::zero(), HashValue::zero(), version, 0, None),
             HashValue::zero(),
         ),
-        BTreeMap::new(),
+        AggregatedSignature::empty(),
     )
 }
 
