@@ -7781,6 +7781,7 @@ dependencies = [
  "move-deps",
  "network",
  "once_cell",
+ "schemadb",
  "scratchpad",
  "serde 1.0.137",
  "storage-interface",
