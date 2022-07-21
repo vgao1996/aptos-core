@@ -621,34 +621,16 @@ pub trait DbWriter: Send + Sync {
     /// See [`AptosDB::save_transactions`].
     ///
     /// [`AptosDB::save_transactions`]: ../aptosdb/struct.AptosDB.html#method.save_transactions
-    fn save_transactions_ext(
-        &self,
-        txns_to_commit: &[TransactionToCommit],
-        first_version: Version,
-        base_state_version: Option<Version>,
-        ledger_info_with_sigs: Option<&LedgerInfoWithSignatures>,
-        save_state_snapshots: bool,
-        latest_in_memory_state: StateDelta,
-    ) -> Result<()> {
-        unimplemented!()
-    }
-
     fn save_transactions(
         &self,
         txns_to_commit: &[TransactionToCommit],
         first_version: Version,
         base_state_version: Option<Version>,
         ledger_info_with_sigs: Option<&LedgerInfoWithSignatures>,
+        sync_commit: bool,
         latest_in_memory_state: StateDelta,
     ) -> Result<()> {
-        self.save_transactions_ext(
-            txns_to_commit,
-            first_version,
-            base_state_version,
-            ledger_info_with_sigs,
-            true, /* save_state_snapshots */
-            latest_in_memory_state,
-        )
+        unimplemented!()
     }
 
     fn save_state_snapshot_for_bench(
