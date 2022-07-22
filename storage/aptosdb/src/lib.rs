@@ -21,6 +21,7 @@ pub mod schema;
 mod change_set;
 mod db_options;
 mod event_store;
+mod indexer;
 mod ledger_counters;
 mod ledger_store;
 mod pruner;
@@ -33,6 +34,7 @@ mod transaction_store;
 mod aptosdb_test;
 
 use crate::db_options::{gen_index_db_cfds, index_db_column_families};
+use crate::table_info::TableInfoSchema;
 use crate::{
     backup::{backup_handler::BackupHandler, restore_handler::RestoreHandler, restore_utils},
     change_set::{ChangeSet, SealedChangeSet},
@@ -60,6 +62,7 @@ use aptos_crypto::hash::{HashValue, SPARSE_MERKLE_PLACEHOLDER_HASH};
 use aptos_infallible::Mutex;
 use aptos_logger::prelude::*;
 use aptos_types::epoch_state::EpochState;
+use aptos_types::state_store::table::{TableHandle, TableInfo};
 use aptos_types::{
     account_address::AccountAddress,
     contract_event::EventWithVersion,
@@ -252,7 +255,7 @@ impl Drop for RocksdbPropertyReporter {
 pub struct AptosDB {
     ledger_db: Arc<DB>,
     state_merkle_db: Arc<DB>,
-    _index_db: Arc<DB>,
+    index_db: Arc<DB>,
     event_store: Arc<EventStore>,
     ledger_store: Arc<LedgerStore>,
     state_store: Arc<StateStore>,
@@ -289,7 +292,7 @@ impl AptosDB {
         AptosDB {
             ledger_db: Arc::clone(&arc_ledger_rocksdb),
             state_merkle_db: Arc::clone(&arc_state_merkle_rocksdb),
-            _index_db: Arc::new(index_db),
+            index_db: Arc::new(index_db),
             event_store: Arc::new(EventStore::new(Arc::clone(&arc_ledger_rocksdb))),
             ledger_store: Arc::new(LedgerStore::new(Arc::clone(&arc_ledger_rocksdb))),
             state_store: Arc::new(StateStore::new(
@@ -750,6 +753,10 @@ impl AptosDB {
         if let Some(pruner) = self.pruner.as_ref() {
             pruner.maybe_wake_pruner(latest_version)
         }
+    }
+
+    fn get_table_info_option(&self, handle: TableHandle) -> Result<Option<TableInfo>> {
+        self.index_db.get::<TableInfoSchema>(&handle)
     }
 }
 
@@ -1263,7 +1270,7 @@ impl DbReader for AptosDB {
     }
 
     fn get_latest_state_snapshot(&self) -> Result<Option<(Version, HashValue)>> {
-        gauged_api("get_latest_state_snapshot_version", || {
+        gauged_api("get_latest_state_snapshot", || {
             let num_txns = self
                 .ledger_store
                 .get_latest_transaction_info_option()?
@@ -1338,6 +1345,13 @@ impl DbReader for AptosDB {
                 }
             }
             Ok(pruner_window)
+        })
+    }
+
+    fn get_table_info(&self, handle: TableHandle) -> Result<TableInfo> {
+        gauged_api("get_table_info", || {
+            self.get_table_info_option(handle)?
+                .ok_or_else(|| AptosDbError::NotFound(format!("TableInfo for {:?}", handle)).into())
         })
     }
 }
@@ -1578,6 +1592,11 @@ impl DbWriter for AptosDB {
                 LEDGER_VERSION.set(x.ledger_info().version() as i64);
                 NEXT_BLOCK_EPOCH.set(x.ledger_info().next_block_epoch() as i64);
             }
+
+            // TODO: make internal indexer asynchronous.
+            // Note: this must happen after txns have been saved to db because types can be newly
+            // created in this same chunk of transactions.
+            self.index_transactions(last_version, txns_to_commit)?;
 
             Ok(())
         })
