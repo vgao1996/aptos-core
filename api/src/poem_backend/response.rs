@@ -29,6 +29,8 @@
 
 // TODO: Pending further discussion with the team, migrate back to U64 over u64.
 
+use std::fmt::Display;
+
 use super::accept_type::AcceptType;
 use aptos_api_types::U64;
 use poem_openapi::{payload::Json, types::ToJSON, Enum, Object, ResponseContent};
@@ -373,3 +375,13 @@ generate_error_response!(
     (500, Internal)
 );
 pub type BasicResultWith404<T> = poem::Result<BasicResponse<T>, BasicErrorWith404>;
+
+// Just this one helper for a specific kind of 404.
+pub fn build_not_found<S: Display, E: NotFoundError>(
+    resource: &str,
+    identifier: S,
+    ledger_version: u64,
+) -> E {
+    E::not_found_str(&format!("{} not found by {}", resource, identifier))
+        .aptos_ledger_version(ledger_version)
+}
