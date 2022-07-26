@@ -330,7 +330,7 @@ impl Block {
     }
 
     pub fn transactions_to_execute(&self, validators: &[AccountAddress]) -> Vec<Transaction> {
-        std::iter::once(Transaction::BlockMetadata(
+        once(Transaction::BlockMetadata(
             self.new_block_metadata(validators),
         ))
         .chain(

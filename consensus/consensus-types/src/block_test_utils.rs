@@ -16,6 +16,7 @@ use aptos_crypto::{
     PrivateKey, Uniform,
 };
 use aptos_types::ledger_info::generate_ledger_info_with_sig;
+use aptos_types::on_chain_config::ValidatorSet;
 use aptos_types::{
     account_address::AccountAddress,
     block_info::BlockInfo,
@@ -254,6 +255,7 @@ pub fn certificate_for_genesis() -> QuorumCert {
     QuorumCert::certificate_for_genesis_from_ledger_info(
         &ledger_info,
         Block::make_genesis_block_from_ledger_info(&ledger_info).id(),
+        &ValidatorSet::empty(),
     )
 }
 

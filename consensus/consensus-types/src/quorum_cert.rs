@@ -5,6 +5,7 @@ use crate::vote_data::VoteData;
 use anyhow::{ensure, Context};
 use aptos_crypto::{hash::CryptoHash, HashValue};
 use aptos_types::aggregated_signature::AggregatedSignature;
+use aptos_types::on_chain_config::ValidatorSet;
 use aptos_types::{
     block_info::BlockInfo,
     ledger_info::{LedgerInfo, LedgerInfoWithSignatures},
@@ -72,6 +73,7 @@ impl QuorumCert {
     pub fn certificate_for_genesis_from_ledger_info(
         ledger_info: &LedgerInfo,
         genesis_id: HashValue,
+        validator_set: &ValidatorSet,
     ) -> QuorumCert {
         let ancestor = BlockInfo::new(
             ledger_info
@@ -90,7 +92,10 @@ impl QuorumCert {
 
         QuorumCert::new(
             vote_data,
-            LedgerInfoWithSignatures::new(li, AggregatedSignature::default()),
+            LedgerInfoWithSignatures::new(
+                li,
+                AggregatedSignature::new(vec![false; validator_set.payload().count()], None),
+            ),
         )
     }
 
