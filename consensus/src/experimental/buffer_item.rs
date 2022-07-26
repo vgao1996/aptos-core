@@ -19,8 +19,8 @@ use consensus_types::{
 
 use crate::{experimental::hashable::Hashable, state_replication::StateComputerCommitCallBackType};
 use aptos_crypto::HashValue;
-use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::ledger_info::LedgerInfoWithPartialSignatures;
+use aptos_types::multi_signature::PartialSignatures;
 
 fn generate_commit_proof(
     commit_info: &BlockInfo,
@@ -49,7 +49,7 @@ fn aggregate_ledger_info(
             .collect(),
     );
     let aggregated_sig = validator
-        .generate_and_verify_aggregated_signature(&valid_sigs, commit_ledger_info)
+        .generate_and_verify_multi_signature(&valid_sigs, commit_ledger_info)
         .expect("Failed to generate aggregated signature");
     LedgerInfoWithSignatures::new(commit_ledger_info.clone(), aggregated_sig)
 }

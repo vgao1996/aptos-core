@@ -11,8 +11,8 @@ use aptos_crypto::{
 use aptos_infallible::RwLock;
 use aptos_mempool::mocks::MockSharedMempool;
 use aptos_time_service::TimeService;
-use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::ledger_info::generate_ledger_info_with_sig;
+use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::{
     account_address::AccountAddress,
     block_info::BlockInfo,
@@ -766,7 +766,7 @@ impl MockStorage {
                 LedgerInfoWithSignatures::new(
                     ledger_info,
                     verfier
-                        .generate_aggregated_signature(&partial_signatures)
+                        .generate_multi_signature(&partial_signatures)
                         .unwrap()
                         .0,
                 ),

@@ -1,8 +1,8 @@
 // Copyright (c) Aptos
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::multi_signature::PartialSignatures;
 use crate::ledger_info::generate_ledger_info_with_sig;
+use crate::multi_signature::PartialSignatures;
 use crate::validator_verifier::ValidatorVerifier;
 use crate::{
     access_path::AccessPath,
@@ -654,7 +654,7 @@ impl Arbitrary for LedgerInfoWithSignatures {
                 LedgerInfoWithSignatures::new(
                     ledger_info,
                     validator_verifier
-                        .generate_aggregated_signature(&partial_sig)
+                        .generate_multi_signature(&partial_sig)
                         .unwrap()
                         .0,
                 )
