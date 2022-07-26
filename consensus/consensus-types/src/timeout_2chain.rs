@@ -205,9 +205,9 @@ fn test_2chain_timeout_certificate() {
     use crate::vote_data::VoteData;
     use aptos_crypto::hash::CryptoHash;
     use aptos_types::{
-        multi_signature::PartialSignatures,
         block_info::BlockInfo,
         ledger_info::{LedgerInfo, LedgerInfoWithPartialSignatures},
+        multi_signature::PartialSignatures,
         validator_verifier::random_validator_verifier,
     };
 

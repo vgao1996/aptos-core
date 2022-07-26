@@ -11,7 +11,6 @@ use crate::{
     test_utils::{consensus_runtime, RandomComputeResultStateComputer},
 };
 use aptos_crypto::HashValue;
-use aptos_types::on_chain_config::ValidatorSet;
 use aptos_types::{ledger_info::LedgerInfo, validator_verifier::random_validator_verifier};
 use consensus_types::{
     block::{block_test_utils::certificate_for_genesis, Block},
@@ -69,7 +68,6 @@ fn add_execution_phase_test_cases(
     let bad_qc = QuorumCert::certificate_for_genesis_from_ledger_info(
         &LedgerInfo::mock_genesis(None),
         random_hash_value,
-        &ValidatorSet::empty(),
     );
     let bad_block =
         Block::new_proposal(Payload::new_empty(), 1, 1, bad_qc, &signers[0], Vec::new());

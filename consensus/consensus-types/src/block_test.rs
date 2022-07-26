@@ -11,8 +11,8 @@ use crate::{
     vote_data::VoteData,
 };
 use aptos_crypto::{hash::HashValue, test_utils::TestAptosCrypto};
-use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::ledger_info::LedgerInfoWithPartialSignatures;
+use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::{
     account_address::AccountAddress,
     block_info::{BlockInfo, Round},
@@ -172,11 +172,10 @@ fn test_block_metadata_bitmaps() {
     let validators: Vec<_> = validator_verifier
         .get_ordered_account_addresses_iter()
         .collect();
-    let ledger_info = LedgerInfo::mock_genesis(Some(validator_set.clone()));
+    let ledger_info = LedgerInfo::mock_genesis(Some(validator_set));
     let genesis_qc = QuorumCert::certificate_for_genesis_from_ledger_info(
         &ledger_info,
         Block::make_genesis_block_from_ledger_info(&ledger_info).id(),
-        &validator_set,
     );
     let payload = Payload::new_empty();
     let start_round = 1;

@@ -6,7 +6,6 @@ use anyhow::{format_err, Context, Result};
 use aptos_config::config::NodeConfig;
 use aptos_crypto::HashValue;
 use aptos_logger::prelude::*;
-use aptos_types::on_chain_config::ValidatorSet;
 use aptos_types::{
     epoch_change::EpochChangeProof, ledger_info::LedgerInfoWithSignatures, transaction::Version,
 };
@@ -88,7 +87,6 @@ impl LedgerRecoveryData {
             let genesis_qc = QuorumCert::certificate_for_genesis_from_ledger_info(
                 self.storage_ledger.ledger_info(),
                 genesis.id(),
-                &ValidatorSet::empty(),
             );
             let genesis_ledger_info = genesis_qc.ledger_info().clone();
             let genesis_id = genesis.id();
