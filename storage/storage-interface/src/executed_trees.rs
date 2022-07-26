@@ -2,15 +2,15 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use crate::{
-    cached_state_view::CachedStateView, no_proof_fetcher::NoProofFetcher, state_delta::StateDelta,
+    async_proof_fetcher::AsyncProofFetcher, cached_state_view::CachedStateView,
+    no_proof_fetcher::NoProofFetcher, proof_fetcher::ProofFetcher, state_delta::StateDelta,
     sync_proof_fetcher::SyncProofFetcher, DbReader,
 };
 use anyhow::Result;
 use aptos_crypto::{hash::TransactionAccumulatorHasher, HashValue};
 use aptos_state_view::StateViewId;
 use aptos_types::{proof::accumulator::InMemoryAccumulator, transaction::Version};
-use std::ops::Deref;
-use std::sync::Arc;
+use std::{ops::Deref, sync::Arc};
 
 /// A wrapper of the in-memory state sparse merkle tree and the transaction accumulator that
 /// represent a specific state collectively. Usually it is a state after executing a block.
@@ -86,6 +86,20 @@ impl ExecutedTrees {
     pub fn is_same_view(&self, rhs: &Self) -> bool {
         self.state().has_same_current_state(rhs.state())
             && self.transaction_accumulator.root_hash() == rhs.transaction_accumulator.root_hash()
+    }
+
+    pub fn async_verified_state_view(
+        &self,
+        id: StateViewId,
+        reader: &Arc<dyn DbReader>,
+    ) -> Result<CachedStateView<AsyncProofFetcher>> {
+        CachedStateView::new(
+            id,
+            reader.deref(),
+            self.transaction_accumulator.num_leaves(),
+            self.state.current.clone(),
+            AsyncProofFetcher::new(reader.clone()),
+        )
     }
 
     pub fn verified_state_view<'a>(

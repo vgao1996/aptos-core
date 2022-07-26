@@ -22,11 +22,10 @@ use aptos_types::{
 use aptos_vm::VMExecutor;
 use executor_types::ExecutedChunk;
 use move_deps::move_core_types::move_resource::MoveResource;
-use std::ops::Deref;
-use std::{collections::btree_map::BTreeMap, sync::Arc};
-use storage_interface::sync_proof_fetcher::SyncProofFetcher;
+use std::{collections::btree_map::BTreeMap, ops::Deref, sync::Arc};
 use storage_interface::{
-    cached_state_view::CachedStateView, DbReaderWriter, DbWriter, ExecutedTrees,
+    cached_state_view::CachedStateView, sync_proof_fetcher::SyncProofFetcher, DbReaderWriter,
+    DbWriter, ExecutedTrees,
 };
 
 pub fn generate_waypoint<V: VMExecutor>(
