@@ -225,9 +225,9 @@ fn test_2chain_timeout_certificate() {
             ledger_info.add_signature(signer.author(), signature);
         }
         QuorumCert::new(
-            vote_data.clone(),
+            vote_data,
             ledger_info
-                .aggregate_signatures(&validators, &vote_data)
+                .aggregate_signatures(&validators, ledger_info.ledger_info())
                 .unwrap(),
         )
     };

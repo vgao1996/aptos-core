@@ -204,7 +204,7 @@ impl ValidatorVerifier {
         ))
     }
 
-    pub fn verify_and_generate_aggregated_signature<T: CryptoHash + Serialize>(
+    pub fn generate_and_verify_aggregated_signature<T: CryptoHash + Serialize>(
         &self,
         partial_signatures: &PartialSignatures,
         message: &T,

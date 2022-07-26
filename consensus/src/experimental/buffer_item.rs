@@ -49,7 +49,7 @@ fn aggregate_ledger_info(
             .collect(),
     );
     let aggregated_sig = validator
-        .verify_and_generate_aggregated_signature(&valid_sigs, commit_ledger_info)
+        .generate_and_verify_aggregated_signature(&valid_sigs, commit_ledger_info)
         .expect("Failed to generate aggregated signature");
     LedgerInfoWithSignatures::new(commit_ledger_info.clone(), aggregated_sig)
 }
