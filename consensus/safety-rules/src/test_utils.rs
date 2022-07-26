@@ -7,8 +7,8 @@ use crate::{
 };
 use aptos_crypto::hash::{CryptoHash, TransactionAccumulatorHasher};
 use aptos_secure_storage::{InMemoryStorage, Storage};
-use aptos_types::aggregated_signature::{AggregatedSignature, PartialSignatures};
 use aptos_types::ledger_info::LedgerInfoWithPartialSignatures;
+use aptos_types::multi_signature::{MultiSignature, PartialSignatures};
 use aptos_types::validator_verifier::generate_validator_verifier;
 use aptos_types::{
     block_info::BlockInfo,
@@ -44,7 +44,7 @@ pub fn make_genesis(signer: &ValidatorSigner) -> (EpochChangeProof, QuorumCert) 
     let li = LedgerInfo::mock_genesis(Some(validator_set.clone()));
     let block = Block::make_genesis_block_from_ledger_info(&li);
     let qc = QuorumCert::certificate_for_genesis_from_ledger_info(&li, block.id(), &validator_set);
-    let lis = LedgerInfoWithSignatures::new(li, AggregatedSignature::empty());
+    let lis = LedgerInfoWithSignatures::new(li, MultiSignature::empty());
     let proof = EpochChangeProof::new(vec![lis], false);
     (proof, qc)
 }

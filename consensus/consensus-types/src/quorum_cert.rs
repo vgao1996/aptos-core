@@ -4,7 +4,7 @@
 use crate::vote_data::VoteData;
 use anyhow::{ensure, Context};
 use aptos_crypto::{hash::CryptoHash, HashValue};
-use aptos_types::aggregated_signature::AggregatedSignature;
+use aptos_types::multi_signature::MultiSignature;
 use aptos_types::on_chain_config::ValidatorSet;
 use aptos_types::{
     block_info::BlockInfo,
@@ -94,7 +94,7 @@ impl QuorumCert {
             vote_data,
             LedgerInfoWithSignatures::new(
                 li,
-                AggregatedSignature::new(vec![false; validator_set.payload().count()], None),
+                MultiSignature::new(vec![false; validator_set.payload().count()], None),
             ),
         )
     }

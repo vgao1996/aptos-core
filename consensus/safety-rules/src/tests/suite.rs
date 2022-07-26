@@ -3,7 +3,7 @@
 
 use crate::{test_utils, test_utils::make_timeout_cert, Error, TSafetyRules};
 use aptos_crypto::hash::{HashValue, ACCUMULATOR_PLACEHOLDER_HASH};
-use aptos_types::aggregated_signature::AggregatedSignature;
+use aptos_types::multi_signature::MultiSignature;
 use aptos_types::{
     block_info::BlockInfo,
     epoch_state::EpochState,
@@ -634,7 +634,7 @@ fn test_sign_commit_vote(constructor: &Callback) {
                         ),
                         ledger_info_with_sigs.ledger_info().consensus_data_hash()
                     ),
-                    AggregatedSignature::empty(),
+                    MultiSignature::empty(),
                 ),
                 ledger_info_with_sigs.ledger_info().clone()
             )
@@ -648,7 +648,7 @@ fn test_sign_commit_vote(constructor: &Callback) {
             .sign_commit_vote(
                 LedgerInfoWithSignatures::new(
                     ledger_info_with_sigs.ledger_info().clone(),
-                    AggregatedSignature::empty(),
+                    MultiSignature::empty(),
                 ),
                 ledger_info_with_sigs.ledger_info().clone()
             )

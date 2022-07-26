@@ -9,7 +9,7 @@ use aptos_config::config::StorageServiceConfig;
 use aptos_crypto::{ed25519::Ed25519PrivateKey, HashValue, PrivateKey, SigningKey, Uniform};
 use aptos_logger::Level;
 use aptos_time_service::{MockTimeService, TimeService};
-use aptos_types::aggregated_signature::AggregatedSignature;
+use aptos_types::multi_signature::MultiSignature;
 use aptos_types::{
     account_address::AccountAddress,
     block_info::BlockInfo,
@@ -1290,7 +1290,7 @@ fn create_test_ledger_info_with_sigs(epoch: u64, version: u64) -> LedgerInfoWith
         ),
         HashValue::zero(),
     );
-    LedgerInfoWithSignatures::new(ledger_info, AggregatedSignature::empty())
+    LedgerInfoWithSignatures::new(ledger_info, MultiSignature::empty())
 }
 
 /// Creates a test transaction output

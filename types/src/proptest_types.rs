@@ -1,7 +1,7 @@
 // Copyright (c) Aptos
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::aggregated_signature::PartialSignatures;
+use crate::multi_signature::PartialSignatures;
 use crate::ledger_info::generate_ledger_info_with_sig;
 use crate::validator_verifier::ValidatorVerifier;
 use crate::{

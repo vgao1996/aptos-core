@@ -14,19 +14,19 @@ use serde::{Deserialize, Serialize};
 #[derive(
     Clone, Debug, Default, Eq, PartialEq, Serialize, Deserialize, CryptoHasher, BCSCryptoHash,
 )]
-pub struct AggregatedSignature {
+pub struct MultiSignature {
     validator_bitmask: Vec<bool>,
-    aggregated_signature: Option<bls12381::Signature>,
+    multi_sig: Option<bls12381::Signature>,
 }
 
-impl AggregatedSignature {
+impl MultiSignature {
     pub fn new(
         validator_bitmask: Vec<bool>,
         aggregated_signature: Option<bls12381::Signature>,
     ) -> Self {
         Self {
             validator_bitmask,
-            aggregated_signature,
+            multi_sig: aggregated_signature,
         }
     }
 
@@ -52,8 +52,8 @@ impl AggregatedSignature {
     pub fn get_num_voters(&self) -> usize {
         self.validator_bitmask.iter().filter(|x| **x).count()
     }
-    pub fn aggregated_signature(&self) -> &Option<bls12381::Signature> {
-        &self.aggregated_signature
+    pub fn multi_sig(&self) -> &Option<bls12381::Signature> {
+        &self.multi_sig
     }
 }
 

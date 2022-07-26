@@ -8,7 +8,7 @@ use anyhow::{anyhow, ensure, format_err, Result};
 use aptos_crypto::HashValue;
 use aptos_logger::prelude::*;
 use aptos_state_view::{StateView, StateViewId};
-use aptos_types::aggregated_signature::AggregatedSignature;
+use aptos_types::multi_signature::MultiSignature;
 use aptos_types::{
     access_path::AccessPath,
     account_config::CORE_CODE_ADDRESS,
@@ -174,7 +174,7 @@ pub fn calculate_genesis<V: VMExecutor>(
             ),
             genesis_block_id(), /* consensus_data_hash */
         ),
-        AggregatedSignature::empty(), /* signatures */
+        MultiSignature::empty(), /* signatures */
     );
     output.ledger_info = Some(ledger_info_with_sigs);
 

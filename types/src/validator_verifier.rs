@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, fmt};
 use thiserror::Error;
 
-use crate::aggregated_signature::{AggregatedSignature, PartialSignatures};
+use crate::multi_signature::{MultiSignature, PartialSignatures};
 use crate::validator_signer::ValidatorSigner;
 use anyhow::{ensure, Result};
 use aptos_crypto::bls12381::PublicKey;
@@ -169,10 +169,10 @@ impl ValidatorVerifier {
     pub fn generate_aggregated_signature(
         &self,
         partial_signatures: &PartialSignatures,
-    ) -> Result<(AggregatedSignature, Option<PublicKey>), VerifyError> {
+    ) -> Result<(MultiSignature, Option<PublicKey>), VerifyError> {
         if partial_signatures.is_empty() {
             // In case of empty signature list, we don't have anything to aggregate and verify
-            return Ok((AggregatedSignature::empty(), None));
+            return Ok((MultiSignature::empty(), None));
         }
         let validator_bitmask = self
             .address_to_validator_info
@@ -199,7 +199,7 @@ impl ValidatorVerifier {
         let aggregated_key =
             PublicKey::aggregate(pub_keys_to_agg).map_err(|_| VerifyError::FailedToAggregateKey)?;
         Ok((
-            AggregatedSignature::new(validator_bitmask, Some(aggregated_sig)),
+            MultiSignature::new(validator_bitmask, Some(aggregated_sig)),
             Some(aggregated_key),
         ))
     }
@@ -208,12 +208,12 @@ impl ValidatorVerifier {
         &self,
         partial_signatures: &PartialSignatures,
         message: &T,
-    ) -> Result<AggregatedSignature, VerifyError> {
+    ) -> Result<MultiSignature, VerifyError> {
         let (aggregated_sig, aggregated_key) =
             self.generate_aggregated_signature(partial_signatures)?;
         if let Some(aggregated_key) = aggregated_key {
             aggregated_sig
-                .aggregated_signature()
+                .multi_sig()
                 .as_ref()
                 .ok_or(VerifyError::FailedToAggregateKey)?
                 .verify(message, &aggregated_key)
@@ -225,7 +225,7 @@ impl ValidatorVerifier {
     pub fn verify_aggregated_signatures<T: CryptoHash + Serialize>(
         &self,
         message: &T,
-        aggregated_signature: &AggregatedSignature,
+        aggregated_signature: &MultiSignature,
     ) -> std::result::Result<(), VerifyError> {
         self.check_num_of_signatures(aggregated_signature)?;
         self.check_voting_power(
@@ -251,7 +251,7 @@ impl ValidatorVerifier {
             PublicKey::aggregate(pub_keys_to_agg).map_err(|_| VerifyError::FailedToAggregateKey)?;
 
         aggregated_signature
-            .aggregated_signature()
+            .multi_sig()
             .as_ref()
             .ok_or(VerifyError::InvalidSignature)?
             .verify(message, &aggregated_key)
@@ -262,7 +262,7 @@ impl ValidatorVerifier {
     /// Ensure there are not more than the maximum expected signatures (all possible signatures).
     fn check_num_of_signatures(
         &self,
-        aggregated_signature: &AggregatedSignature,
+        aggregated_signature: &MultiSignature,
     ) -> std::result::Result<(), VerifyError> {
         let num_of_signatures = aggregated_signature.get_num_voters();
         if num_of_signatures > self.len() {

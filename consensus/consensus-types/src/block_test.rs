@@ -11,7 +11,7 @@ use crate::{
     vote_data::VoteData,
 };
 use aptos_crypto::{hash::HashValue, test_utils::TestAptosCrypto};
-use aptos_types::aggregated_signature::PartialSignatures;
+use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::ledger_info::LedgerInfoWithPartialSignatures;
 use aptos_types::{
     account_address::AccountAddress,

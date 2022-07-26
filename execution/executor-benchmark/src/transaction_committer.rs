@@ -3,7 +3,7 @@
 
 use aptos_crypto::hash::HashValue;
 use aptos_logger::prelude::*;
-use aptos_types::aggregated_signature::AggregatedSignature;
+use aptos_types::multi_signature::MultiSignature;
 use aptos_types::{
     block_info::BlockInfo,
     ledger_info::{LedgerInfo, LedgerInfoWithSignatures},
@@ -40,10 +40,7 @@ pub(crate) fn gen_li_with_sigs(
         block_info,
         HashValue::zero(), /* consensus_data_hash, doesn't matter */
     );
-    LedgerInfoWithSignatures::new(
-        ledger_info,
-        AggregatedSignature::empty(), /* signatures */
-    )
+    LedgerInfoWithSignatures::new(ledger_info, MultiSignature::empty() /* signatures */)
 }
 
 pub struct TransactionCommitter {

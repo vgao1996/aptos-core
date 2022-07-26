@@ -19,7 +19,7 @@ use consensus_types::{
 
 use crate::{experimental::hashable::Hashable, state_replication::StateComputerCommitCallBackType};
 use aptos_crypto::HashValue;
-use aptos_types::aggregated_signature::PartialSignatures;
+use aptos_types::multi_signature::PartialSignatures;
 use aptos_types::ledger_info::LedgerInfoWithPartialSignatures;
 
 fn generate_commit_proof(
