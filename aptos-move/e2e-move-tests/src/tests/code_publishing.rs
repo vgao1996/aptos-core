@@ -1,7 +1,7 @@
 // Copyright (c) Aptos
 // SPDX-License-Identifier: Apache-2.0
 
-use crate::{assert_abort, assert_success, assert_vm_status, tests::common, MoveHarness};
+use crate::{assert_abort, assert_success, assert_vm_status, tests::common, MoveHarness, enable_golden};
 use aptos_types::account_address::AccountAddress;
 use aptos_types::on_chain_config::FeatureFlag;
 use framework::natives::code::{PackageRegistry, UpgradePolicy};
@@ -28,6 +28,9 @@ struct State {
 #[case(vec![FeatureFlag::CODE_DEPENDENCY_CHECK])]
 fn code_publishing_basic(#[case] features: Vec<FeatureFlag>) {
     let mut h = MoveHarness::new_with_features(features);
+
+    enable_golden!(h);
+
     let acc = h.new_account_at(AccountAddress::from_hex_literal("0xcafe").unwrap());
     assert_success!(h.publish_package(
         &acc,
@@ -68,6 +71,9 @@ fn code_publishing_basic(#[case] features: Vec<FeatureFlag>) {
 #[case(vec![FeatureFlag::CODE_DEPENDENCY_CHECK])]
 fn code_publishing_upgrade_success_no_compat(#[case] features: Vec<FeatureFlag>) {
     let mut h = MoveHarness::new_with_features(features);
+
+    enable_golden!(h);
+
     let acc = h.new_account_at(AccountAddress::from_hex_literal("0xcafe").unwrap());
 
     // Install the initial version with no compat requirements
@@ -87,6 +93,9 @@ fn code_publishing_upgrade_success_no_compat(#[case] features: Vec<FeatureFlag>)
 #[case(vec![FeatureFlag::CODE_DEPENDENCY_CHECK])]
 fn code_publishing_upgrade_success_compat(#[case] features: Vec<FeatureFlag>) {
     let mut h = MoveHarness::new_with_features(features);
+
+    enable_golden!(h);
+
     let acc = h.new_account_at(AccountAddress::from_hex_literal("0xcafe").unwrap());
 
     // Install the initial version with compat requirements

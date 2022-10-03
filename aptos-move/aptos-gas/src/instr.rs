@@ -55,7 +55,7 @@ crate::params::define_gas_parameters!(
         [
             copy_loc_per_abs_val_unit: InternalGasPerAbstractValueUnit,
             "copy_loc.per_abs_val_unit",
-            4
+            40
         ],
         [move_loc_base: InternalGas, "move_loc.base", 120],
         [st_loc_base: InternalGas, "st_loc.base", 120],
