@@ -24,6 +24,7 @@ mod natives;
 #[macro_use]
 mod params;
 
+mod abstract_algebra;
 mod algebra;
 mod aptos_framework;
 mod gas_meter;

@@ -422,3 +422,13 @@ impl<U> GasQuantity<U> {
         GasQuantity::new(apply_ratio_round_up(self.val, n, d))
     }
 }
+
+/***************************************************************************************************
+ * Misc
+ *
+ **************************************************************************************************/
+impl<U> GasQuantity<U> {
+    pub fn per<T>(self) -> GasQuantity<UnitDiv<U, T>> {
+        GasQuantity::new(self.val)
+    }
+}
