@@ -208,6 +208,7 @@ dependencies = [
  "aptos-framework",
  "aptos-gas",
  "aptos-gas-profiling",
+ "aptos-gas-schedule",
  "aptos-genesis",
  "aptos-github-client",
  "aptos-global-constants",
@@ -1008,6 +1009,7 @@ dependencies = [
  "aptos-crypto",
  "aptos-gas",
  "aptos-gas-profiling",
+ "aptos-gas-schedule",
  "aptos-logger",
  "aptos-memory-usage-tracker",
  "aptos-resource-viewer",
@@ -1418,7 +1420,7 @@ dependencies = [
  "aptos-aggregator",
  "aptos-crypto",
  "aptos-gas",
- "aptos-gas-algebra-ext",
+ "aptos-gas-algebra",
  "aptos-language-e2e-tests",
  "aptos-move-stdlib",
  "aptos-sdk-builder",
@@ -1536,7 +1538,8 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "aptos-framework",
- "aptos-gas-algebra-ext",
+ "aptos-gas-algebra",
+ "aptos-gas-schedule",
  "aptos-global-constants",
  "aptos-logger",
  "aptos-move-stdlib",
@@ -1556,9 +1559,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "aptos-gas-algebra-ext"
+name = "aptos-gas-algebra"
 version = "0.0.1"
 dependencies = [
+ "either",
  "move-core-types",
 ]
 
@@ -1569,6 +1573,7 @@ dependencies = [
  "anyhow",
  "aptos-framework",
  "aptos-gas",
+ "aptos-gas-algebra",
  "aptos-package-builder",
  "aptos-types",
  "inferno",
@@ -1577,6 +1582,20 @@ dependencies = [
  "move-vm-types",
  "regex",
  "smallvec",
+]
+
+[[package]]
+name = "aptos-gas-schedule"
+version = "0.1.0"
+dependencies = [
+ "aptos-gas-algebra",
+ "aptos-global-constants",
+ "aptos-types",
+ "aptos-vm-types",
+ "either",
+ "move-core-types",
+ "move-vm-types",
+ "paste",
 ]
 
 [[package]]
@@ -2034,7 +2053,9 @@ dependencies = [
  "aptos-crypto",
  "aptos-framework",
  "aptos-gas",
+ "aptos-gas-algebra",
  "aptos-gas-profiling",
+ "aptos-gas-schedule",
  "aptos-keygen",
  "aptos-memory-usage-tracker",
  "aptos-proptest-helpers",
@@ -2113,6 +2134,7 @@ name = "aptos-memory-usage-tracker"
 version = "0.1.0"
 dependencies = [
  "aptos-gas",
+ "aptos-gas-algebra",
  "aptos-types",
  "move-binary-format",
  "move-core-types",
@@ -2202,6 +2224,7 @@ name = "aptos-move-examples"
 version = "0.1.0"
 dependencies = [
  "aptos-gas",
+ "aptos-gas-schedule",
  "aptos-types",
  "aptos-vm",
  "clap 4.3.5",
@@ -3525,6 +3548,8 @@ dependencies = [
  "aptos-crypto-derive",
  "aptos-framework",
  "aptos-gas",
+ "aptos-gas-algebra",
+ "aptos-gas-schedule",
  "aptos-infallible",
  "aptos-language-e2e-tests",
  "aptos-logger",
@@ -3587,6 +3612,7 @@ dependencies = [
  "aptos-crypto",
  "aptos-framework",
  "aptos-gas",
+ "aptos-gas-schedule",
  "aptos-proptest-helpers",
  "aptos-state-view",
  "aptos-types",
@@ -5754,6 +5780,7 @@ dependencies = [
  "aptos-crypto",
  "aptos-framework",
  "aptos-gas",
+ "aptos-gas-algebra",
  "aptos-gas-profiling",
  "aptos-keygen",
  "aptos-language-e2e-tests",
@@ -11639,6 +11666,7 @@ dependencies = [
  "aptos-forge",
  "aptos-framework",
  "aptos-gas",
+ "aptos-gas-algebra",
  "aptos-genesis",
  "aptos-global-constants",
  "aptos-indexer",
