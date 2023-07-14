@@ -12,6 +12,7 @@ import load_bench_ns
 import load_bench_datapoints
 from math import ceil
 from pathlib import Path
+from re
 from time import time
 
 # Typically you are making a new version of gas schedule,
@@ -30,6 +31,14 @@ def prettify_number(x:int) -> str:
     chunks_0 = [s[:b]] if b>=1 else []
     chunks = chunks_0 + [s[i:i+3] for i in range(b,n,3)]
     return '_'.join(chunks)
+
+def get_gas_param_type(param_name):
+    if param_name == 'ark_bls12_381_multi_pairing_per_pair':
+        return 'InternalGasPerArg'
+    elif re.match(r'^ark_h2c_bls12381g(1|2)_xmd_sha256_sswu_per_msg_byte$', param_name):
+        return 'InternalGasPerByte'
+    else:
+        return 'InternalGas'
 
 def get_algebra_lines(gas_per_ns):
     nanoseconds = {}
@@ -92,21 +101,21 @@ def get_algebra_lines(gas_per_ns):
     _,_,nanoseconds['ark_h2c_bls12381g1_xmd_sha256_sswu_per_msg_byte'],nanoseconds['ark_h2c_bls12381g1_xmd_sha256_sswu_base'] = get_bench_ns_linear('target/criterion/ark_bls12_381/hash_to_g1_proj')
     _,_,nanoseconds['ark_h2c_bls12381g2_xmd_sha256_sswu_per_msg_byte'],nanoseconds['ark_h2c_bls12381g2_xmd_sha256_sswu_base'] = get_bench_ns_linear('target/criterion/ark_bls12_381/hash_to_g2_proj')
     gas_units = {k:gas_per_ns*v for k,v in nanoseconds.items()}
-    lines = [f'    [.algebra.{k}, {{ {TARGET_GAS_VERSION}.. => "algebra.{k}" }}, {prettify_number(v)} * MUL],' for k,v in sorted(gas_units.items())]
+    lines = [f'        [algebra_{k}: {get_gas_param_type(k)}, {{ {TARGET_GAS_VERSION}.. => "algebra.{k}" }}, {prettify_number(v)}],' for k,v in sorted(gas_units.items())]
     return lines
 
 def main(gas_per_ns):
-    path = Path('aptos-move/aptos-gas/src/aptos_framework.rs')
+    path = Path('aptos-move/aptos-gas-schedule/src/gas_schedule/aptos_framework.rs')
     lines = path.read_text().split('\n')
-    line_id_begin = lines.index('    // Algebra gas parameters begin.')
-    line_id_end = lines.index('    // Algebra gas parameters end.')
-    generator_note_line = f'    // Generated at time {time()} by `scripts/algebra-gas/update_algebra_gas_params.py` with gas_per_ns={gas_per_ns}.'
+    line_id_begin = lines.index('        // Algebra gas parameters begin.')
+    line_id_end = lines.index('        // Algebra gas parameters end.')
+    generator_note_line = f'        // Generated at time {time()} by `scripts/algebra-gas/update_algebra_gas_params.py` with gas_per_ns={gas_per_ns}.'
     new_lines = lines[:line_id_begin+1] + [generator_note_line] + get_algebra_lines(gas_per_ns) + lines[line_id_end:]
     path.write_text('\n'.join(new_lines))
 
 if __name__=='__main__':
     parser = argparse.ArgumentParser(
-        description='Generate gas parameters for algebra module in `aptos-move/aptos-gas/src/aptos_framework.rs`.')
+        description='Generate gas parameters for algebra module in `aptos-move/aptos-gas-schedule/src/gas_schedule/aptos_framework.rs`.')
     parser.add_argument('--gas_per_ns', required=True, type=float)
     args = parser.parse_args()
     main(args.gas_per_ns)
