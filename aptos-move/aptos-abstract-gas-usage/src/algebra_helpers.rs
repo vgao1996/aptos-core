@@ -114,13 +114,13 @@ pub fn collect_terms(terms: Vec<Expression>) -> BTreeMap<String, u64> {
                 if !map.contains_key(&key) {
                     map.insert(key, val);
                 } else {
-                    map.entry(key).and_modify(|v| *v += val);
+                    map.entry(key).and_modify(|v: &mut u64| *v += val);
                 }
             },
             _ => {},
         }
     }
-    map.insert(String::from("STARTUP_COST"), 1);
-    //let _ = map.remove("RET").unwrap();
+    //map.insert(String::from("STARTUP_COST"), 1);
+    //let _ = map.remove("RET");
     map
 }

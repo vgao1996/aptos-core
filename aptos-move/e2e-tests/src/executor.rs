@@ -702,19 +702,24 @@ impl FakeExecutor {
                 vm.new_session(&remote_view, SessionId::void(), self.aggregator_enabled);
 
             // preload module to ensure cache is hot
-            let _ = session.load_module(module);
+            session
+                .load_function(module, &Self::name(function_name), &type_params)
+                .unwrap();
 
             // start measuring here to reduce measurement errors (i.e., the time taken to load vm, module, etc.)
             let mut i = 0;
             let iterations = 10; // TODO: change this to support CLI flag
             let mut times = Vec::new();
             while i < iterations {
+                let name = &Self::name(function_name);
+                let ty_params = type_params.clone();
+                let args = args.clone();
                 let start = Instant::now();
                 let result = session.execute_function_bypass_visibility(
                     module,
-                    &Self::name(function_name),
-                    type_params.clone(),
-                    args.clone(),
+                    name,
+                    ty_params,
+                    args,
                     &mut UnmeteredGasMeter,
                 );
                 let elapsed = start.elapsed();
@@ -724,6 +729,8 @@ impl FakeExecutor {
                 times.push(elapsed.as_micros());
                 i += 1;
             }
+
+            println!("{:?}", times);
             // TODO: use median
             let sum: u128 = times.iter().sum();
             running_time = sum / iterations;
