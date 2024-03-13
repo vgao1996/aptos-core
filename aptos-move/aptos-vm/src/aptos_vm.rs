@@ -1682,7 +1682,7 @@ impl AptosVM {
         })
     }
 
-    fn execute_user_transaction(
+    pub fn execute_user_transaction(
         &self,
         resolver: &impl AptosMoveResolver,
         txn: &SignedTransaction,

@@ -500,6 +500,10 @@ pub async fn profile_or_submit(
     // Profile gas if needed.
     if txn_options_ref.profile_gas {
         txn_options_ref.profile_gas(payload).await
+    } else if txn_options_ref.benchmark_locally {
+        txn_options_ref.benchmark_locally(payload).await
+    } else if txn_options_ref.simulate_locally {
+        txn_options_ref.simulate_locally(payload).await
     } else {
         // Otherwise submit the transaction.
         txn_options_ref

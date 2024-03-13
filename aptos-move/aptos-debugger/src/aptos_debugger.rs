@@ -61,8 +61,22 @@ impl AptosDebugger {
         let sig_verified_txns: Vec<SignatureVerifiedTransaction> =
             txns.into_iter().map(|x| x.into()).collect::<Vec<_>>();
         let state_view = DebuggerStateView::new(self.debugger.clone(), version);
-        AptosVM::execute_block_no_limit(&sig_verified_txns, &state_view)
-            .map_err(|err| format_err!("Unexpected VM Error: {:?}", err))
+
+        let res = AptosVM::execute_block_no_limit(&sig_verified_txns, &state_view)
+            .map_err(|err| format_err!("Unexpected VM Error: {:?}", err));
+
+        let mut times = vec![];
+        let n = 10;
+        for i in 0..n {
+            let t1 = std::time::Instant::now();
+            _ = AptosVM::execute_block_no_limit(&sig_verified_txns, &state_view);
+            let t2 = std::time::Instant::now();
+            times.push(t2 - t1);
+        }
+        times.sort();
+        println!("{:?}", times[n / 2]);
+
+        res
     }
 
     pub fn execute_transaction_at_version_with_gas_profiler(
@@ -77,7 +91,8 @@ impl AptosDebugger {
             .map_err(|err| format_err!("Unexpected VM Error: {:?}", err))?;
 
         // TODO(Gas): revisit this.
-        let resolver = state_view.as_move_resolver();
+        let resolver: aptos_vm::data_cache::StorageAdapter<'_, DebuggerStateView> =
+            state_view.as_move_resolver();
         let vm = AptosVM::new(
             &resolver,
             /*override_is_delayed_field_optimization_capable=*/ Some(false),
@@ -112,7 +127,7 @@ impl AptosDebugger {
 
                     // Deprecated.
                     TransactionPayload::ModuleBundle(..) => {
-                        unreachable!("Module bundle payload has already been checked")
+                        unreachable!("Module bundle payload has already been deprecated")
                     },
                 };
                 Ok(gas_profiler)

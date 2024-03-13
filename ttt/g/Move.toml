@@ -1,0 +1,12 @@
+[package]
+name = "G"
+version = "1.0.0"
+authors = []
+
+[addresses]
+
+[dev-addresses]
+
+[dependencies]
+
+[dev-dependencies]

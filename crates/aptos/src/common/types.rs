@@ -44,10 +44,15 @@ use aptos_types::{
         SignedTransaction, TransactionArgument, TransactionPayload, TransactionStatus,
     },
 };
+use aptos_vm::{data_cache::AsMoveResolver, AptosVM};
+use aptos_vm_logging::log_schema::AdapterLogSchema;
+use aptos_vm_types::{output::VMOutput, resolver::StateStorageView};
 use async_trait::async_trait;
 use clap::{Parser, ValueEnum};
 use hex::FromHexError;
-use move_core_types::{account_address::AccountAddress, language_storage::TypeTag};
+use move_core_types::{
+    account_address::AccountAddress, language_storage::TypeTag, vm_status::VMStatus,
+};
 use move_package::CompilerVersion;
 use serde::{Deserialize, Serialize};
 #[cfg(unix)]
@@ -1501,6 +1506,14 @@ pub struct TransactionOptions {
     #[clap(flatten)]
     pub(crate) prompt_options: PromptOptions,
 
+    /// If this option is set, simulate the transaction locally.
+    #[clap(long)]
+    pub(crate) simulate_locally: bool,
+
+    /// If this option is set, benchmark the transaction locally.
+    #[clap(long)]
+    pub(crate) benchmark_locally: bool,
+
     /// If this option is set, simulate the transaction locally using the debugger and generate
     /// flamegraphs that reflect the gas usage.
     #[clap(long)]
@@ -1722,14 +1735,19 @@ impl TransactionOptions {
         }
     }
 
-    /// Simulate the transaction locally using the debugger, with the gas profiler enabled.
-    pub async fn profile_gas(
+    pub async fn simulate_using_debugger<R, F>(
         &self,
         payload: TransactionPayload,
-    ) -> CliTypedResult<TransactionSummary> {
-        println!();
-        println!("Simulating transaction locally with the gas profiler...");
-
+        execute: F,
+    ) -> CliTypedResult<(TransactionSummary, R)>
+    where
+        F: FnOnce(
+            &AptosDebugger,
+            u64,
+            SignedTransaction,
+            aptos_crypto::HashValue,
+        ) -> CliTypedResult<(VMStatus, VMOutput, R)>,
+    {
         let client = self.rest_client()?;
 
         // Fetch the chain states required for the simulation
@@ -1761,7 +1779,6 @@ impl TransactionOptions {
             }
         });
 
-        // Create and sign the transaction
         let transaction_factory = TransactionFactory::new(chain_id)
             .with_gas_unit_price(gas_unit_price)
             .with_max_gas_amount(max_gas)
@@ -1771,12 +1788,147 @@ impl TransactionOptions {
             sender_account.sign_with_transaction_builder(transaction_factory.payload(payload));
         let hash = transaction.clone().committed_hash();
 
-        // Execute the transaction using the debugger
         let debugger = AptosDebugger::rest_client(client).unwrap();
-        let res = debugger.execute_transaction_at_version_with_gas_profiler(version, transaction);
-        let (vm_status, output, gas_log) = res.map_err(|err| {
-            CliError::UnexpectedError(format!("failed to simulate txn with gas profiler: {}", err))
-        })?;
+        let (vm_status, vm_output, res) = execute(&debugger, version, transaction, hash)?;
+
+        let success = match vm_output.status() {
+            TransactionStatus::Keep(exec_status) => Some(exec_status.is_success()),
+            TransactionStatus::Discard(_) | TransactionStatus::Retry => None,
+        };
+
+        let summary = TransactionSummary {
+            transaction_hash: hash.into(),
+            gas_used: Some(vm_output.gas_used()),
+            gas_unit_price: Some(gas_unit_price),
+            pending: None,
+            sender: Some(sender_address),
+            sequence_number: None, // The transaction is not comitted so there is no new sequence number.
+            success,
+            timestamp_us: None,
+            version: Some(version), // The transaction is not comitted so there is no new version.
+            vm_status: Some(vm_status.to_string()),
+        };
+
+        Ok((summary, res))
+    }
+
+    pub async fn simulate_locally(
+        &self,
+        payload: TransactionPayload,
+    ) -> CliTypedResult<TransactionSummary> {
+        println!();
+        println!("Simulating transaction locally...");
+
+        let (summary, ()) = self
+            .simulate_using_debugger(payload, |debugger, version, transaction, _hash| {
+                let state_view = debugger.state_view_at_version(version);
+                let resolver = state_view.as_move_resolver();
+
+                let vm = AptosVM::new(&resolver, None);
+                let log_context = AdapterLogSchema::new(resolver.id(), 0);
+
+                let (vm_status, output) =
+                    vm.execute_user_transaction(&resolver, &transaction, &log_context);
+
+                Ok((vm_status, output, ()))
+            })
+            .await?;
+
+        Ok(summary)
+    }
+
+    pub async fn benchmark_locally(
+        &self,
+        payload: TransactionPayload,
+    ) -> CliTypedResult<TransactionSummary> {
+        println!();
+        println!("Benchmarking transaction locally...");
+
+        let (summary, ()) = self
+            .simulate_using_debugger(payload, |debugger, version, transaction, _hash| {
+                let state_view = debugger.state_view_at_version(version);
+                let resolver = state_view.as_move_resolver();
+
+                let vm = AptosVM::new(&resolver, None);
+                let log_context = AdapterLogSchema::new(resolver.id(), 0);
+
+                let (vm_status, output) =
+                    vm.execute_user_transaction(&resolver, &transaction, &log_context);
+
+                let time_cold = {
+                    let n = 15;
+
+                    let mut times = vec![];
+                    for _i in 0..n {
+                        let vm = AptosVM::new(&resolver, None);
+                        let log_context = AdapterLogSchema::new(resolver.id(), 0);
+
+                        let t1 = Instant::now();
+                        std::hint::black_box(vm.execute_user_transaction(
+                            &resolver,
+                            &transaction,
+                            &log_context,
+                        ));
+                        let t2 = Instant::now();
+
+                        times.push(t2 - t1);
+                    }
+                    times.sort();
+
+                    times[n / 2]
+                };
+
+                let time_warm = {
+                    let mut times = vec![];
+                    let n = 15;
+
+                    for _i in 0..n {
+                        let t1 = Instant::now();
+                        std::hint::black_box(vm.execute_user_transaction(
+                            &resolver,
+                            &transaction,
+                            &log_context,
+                        ));
+                        let t2 = Instant::now();
+
+                        times.push(t2 - t1);
+                    }
+
+                    times[n / 2]
+                };
+
+                println!("Running time (cold code cache): {:?}", time_cold);
+                println!("Running time (warm code cache): {:?}", time_warm);
+
+                Ok((vm_status, output, ()))
+            })
+            .await?;
+
+        Ok(summary)
+    }
+
+    /// Simulate the transaction locally using the debugger, with the gas profiler enabled.
+    pub async fn profile_gas(
+        &self,
+        payload: TransactionPayload,
+    ) -> CliTypedResult<TransactionSummary> {
+        println!();
+        println!("Simulating transaction locally using the gas profiler...");
+
+        // Execute the transaction using the debugger
+        let (summary, (gas_log, hash)) = self
+            .simulate_using_debugger(payload, |debugger, version, transaction, hash| {
+                debugger
+                    .execute_transaction_at_version_with_gas_profiler(version, transaction)
+                    .map_err(|err| {
+                        CliError::UnexpectedError(format!(
+                            "failed to simulate txn with gas profiler: {}",
+                            err
+                        ))
+                    })
+                    .map(|(vm_status, vm_output, gas_log)| (vm_status, vm_output, (gas_log, hash)))
+            })
+            .await?;
 
         // Generate a humen-readable name for the report
         let entry_point = gas_log.entry_point();
@@ -1799,28 +1951,12 @@ impl TransactionOptions {
 
         // Generate the report
         let path = Path::new("gas-profiling").join(raw_file_name);
-        gas_log.generate_html_report(path, format!("Gas Report - {}", human_readable_name))?;
+        gas_log.generate_html_report(&path, format!("Gas Report - {}", human_readable_name))?;
 
-        // Generate the transaction summary
+        println!("Gas report saved to {}.", path.display());
 
-        // TODO(Gas): double check if this is correct.
-        let success = match output.status() {
-            TransactionStatus::Keep(exec_status) => Some(exec_status.is_success()),
-            TransactionStatus::Discard(_) | TransactionStatus::Retry => None,
-        };
-
-        Ok(TransactionSummary {
-            transaction_hash: hash.into(),
-            gas_used: Some(output.gas_used()),
-            gas_unit_price: Some(gas_unit_price),
-            pending: None,
-            sender: Some(sender_address),
-            sequence_number: None, // The transaction is not comitted so there is no new sequence number.
-            success,
-            timestamp_us: None,
-            version: Some(version), // The transaction is not comitted so there is no new version.
-            vm_status: Some(vm_status.to_string()),
-        })
+        // Return the transaction summary
+        Ok(summary)
     }
 
     pub async fn estimate_gas_price(&self) -> CliTypedResult<u64> {

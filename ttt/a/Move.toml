@@ -1,0 +1,19 @@
+[package]
+name = "my_script"
+version = "1.0.0"
+authors = []
+
+[addresses]
+
+[dev-addresses]
+
+[dependencies]
+MoveStdlib = { local = "../../aptos-move/framework/move-stdlib" }
+B = { local = "../b" }
+C = { local = "../c" }
+D = { local = "../d" }
+E = { local = "../e" }
+F = { local = "../f" }
+G = { local = "../g" }
+
+[dev-dependencies]

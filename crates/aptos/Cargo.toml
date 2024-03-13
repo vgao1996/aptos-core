@@ -45,6 +45,8 @@ aptos-telemetry = { workspace = true }
 aptos-temppath = { workspace = true }
 aptos-types = { workspace = true }
 aptos-vm = { workspace = true, features = ["testing"] }
+aptos-vm-types = { workspace = true }
+aptos-vm-logging = { workspace = true }
 aptos-vm-genesis = { workspace = true }
 async-trait = { workspace = true }
 base64 = { workspace = true }
